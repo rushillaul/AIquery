@@ -1,8 +1,28 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const executeQuery = require('./database');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { createPool } = require('@vercel/postgres');
+
+let pool = null;
+if (process.env.POSTGRES_URL) {
+    pool = createPool({
+        connectionString: process.env.POSTGRES_URL
+    });
+}
+
+async function executeQuery(sqlString, params = []) {
+    if (!pool) {
+        throw new Error("Missing POSTGRES_URL environment variable or pool not initialized.");
+    }
+    const client = await pool.connect();
+    try {
+        const result = await client.query(sqlString, params);
+        return result.rows;
+    } finally {
+        client.release();
+    }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -92,11 +112,7 @@ app.post('/api/query', async (req, res) => {
 
         // Step 3: Execute SQL Query Execution
         try {
-            const queryFn = executeQuery.default || executeQuery;
-            if (typeof queryFn !== 'function') {
-                throw new Error("Query function not found. Imported module: " + typeof executeQuery);
-            }
-            const rows = await queryFn(aiResponse.sql);
+            const rows = await executeQuery(aiResponse.sql);
 
             // Step 4: Return Results + Insightful Explanation
             res.json({
