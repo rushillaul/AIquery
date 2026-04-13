@@ -1,8 +1,12 @@
-const { db } = require('@vercel/postgres');
+const { createPool } = require('@vercel/postgres');
+
+const pool = createPool({
+    connectionString: process.env.POSTGRES_URL
+});
 
 async function seedDatabase() {
     try {
-        const client = await db.connect();
+        const client = await pool.connect();
         
         console.log("Setting up Postgres schema...");
         
@@ -57,10 +61,10 @@ if (process.env.POSTGRES_URL) {
 
 module.exports = async function query(sqlString, params = []) {
     if (!process.env.POSTGRES_URL) {
-        throw new Error("Missing POSTGRES_URL environment variable. Please configure a Postgres database in your Vercel Dashboard and link it to this project.");
+        throw new Error("Missing POSTGRES_URL environment variable.");
     }
     
-    const client = await db.connect();
+    const client = await pool.connect();
     try {
         const result = await client.query(sqlString, params);
         return result.rows;
