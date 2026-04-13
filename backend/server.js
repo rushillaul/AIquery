@@ -31,15 +31,15 @@ async function generateSQLFromText(userText) {
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
         const prompt = `
 You are an expert SQL Generator. 
-You translate plain English questions into valid SQL queries for a SQLite database.
+You translate plain English questions into valid SQL queries for a PostgreSQL database.
 Here is the schema:
-table: users (id INTEGER PRIMARY KEY AUTOMINCREMENT, name TEXT, email TEXT, role TEXT, salary INTEGER)
-table: orders (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, amount REAL, status TEXT)
+table: users (id SERIAL PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), role VARCHAR(255), salary INTEGER)
+table: orders (id SERIAL PRIMARY KEY, user_id INTEGER, amount DECIMAL(10,2), status VARCHAR(255))
 
 Strict Instructions:
 1. Return ONLY pure, valid JSON (no markdown wrapping).
 2. The JSON MUST have exactly three keys: "sql", "explanation", "isDangerous".
-3. "sql" (string): Executable SQLite code representing the intent. Example: "SELECT * FROM users LIMIT 1".
+3. "sql" (string): Executable PostgreSQL code representing the intent. Example: "SELECT * FROM users LIMIT 1".
 4. "explanation" (string): Simple, non-technical English explanation of the query.
 5. "isDangerous" (boolean): true if it involves DROP, or DELETE/UPDATE without WHERE. Otherwise false.
 6. The user query is: "${userText}"
