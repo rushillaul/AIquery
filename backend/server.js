@@ -7,7 +7,11 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "dummy");
@@ -86,17 +90,9 @@ app.post('/api/query', async (req, res) => {
             });
         }
 
-// Step 3: Execute SQL Query Execution
-        const database = db.getDb ? db.getDb() : db;
-        
-        database.all(aiResponse.sql, [], (err, rows) => {
-            if (err) {
-                return res.status(500).json({ 
-                    error: "SQL Execution Error", 
-                    details: err.message,
-                    constructed_sql: aiResponse.sql
-                });
-            }
+        // Step 3: Execute SQL Query Execution
+        try {
+            const rows = await db.query(aiResponse.sql);
 
             // Step 4: Return Results + Insightful Explanation
             res.json({
@@ -105,7 +101,13 @@ app.post('/api/query', async (req, res) => {
                 results: rows,
                 columns: rows.length > 0 ? Object.keys(rows[0]) : []
             });
-        });
+        } catch (err) {
+            return res.status(500).json({ 
+                error: "SQL Execution Error", 
+                details: err.message,
+                constructed_sql: aiResponse.sql
+            });
+        }
 
     } catch (error) {
         console.error("Server Error:", error);

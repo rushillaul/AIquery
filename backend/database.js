@@ -47,5 +47,12 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 module.exports = {
-    getDb: () => db
+    query: (sql, params = []) => {
+        return new Promise((resolve, reject) => {
+            db.all(sql, params, (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+    }
 };
