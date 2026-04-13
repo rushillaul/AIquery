@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const db = require('./database');
+const executeQuery = require('./database');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
@@ -92,9 +92,9 @@ app.post('/api/query', async (req, res) => {
 
         // Step 3: Execute SQL Query Execution
         try {
-            const queryFn = db.query || (db.default && db.default.query);
-            if (!queryFn) {
-                throw new Error("Query function not found on imported database module.");
+            const queryFn = executeQuery.default || executeQuery;
+            if (typeof queryFn !== 'function') {
+                throw new Error("Query function not found. Imported module: " + typeof executeQuery);
             }
             const rows = await queryFn(aiResponse.sql);
 
