@@ -65,7 +65,7 @@ Strict Instructions:
     }
 }
 
-app.post('/query', async (req, res) => {
+app.post('/api/query', async (req, res) => {
     const { text } = req.body;
     
     if (!text) {
@@ -111,6 +111,10 @@ app.post('/query', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Backend Server strictly resolving incoming SQL requests running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Backend Server strictly resolving incoming SQL requests running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;

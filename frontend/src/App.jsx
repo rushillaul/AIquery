@@ -15,7 +15,7 @@ function App() {
     setResult(null);
 
     try {
-      const response = await fetch('http://localhost:3001/query', {
+      const response = await fetch(import.meta.env.PROD ? '/api/query' : 'http://localhost:3001/api/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
