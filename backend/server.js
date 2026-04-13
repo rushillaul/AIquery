@@ -86,8 +86,9 @@ app.post('/api/query', async (req, res) => {
             });
         }
 
-        // Step 3: Execute SQL Query Execution
-        const database = db.all ? db : (db.default || db);
+// Step 3: Execute SQL Query Execution
+        const database = db.getDb ? db.getDb() : db;
+        
         database.all(aiResponse.sql, [], (err, rows) => {
             if (err) {
                 return res.status(500).json({ 
