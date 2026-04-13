@@ -107,7 +107,7 @@ app.post('/api/query', async (req, res) => {
 
     } catch (error) {
         console.error("Server Error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: "Internal Server Error", details: error.message, stack: error.stack });
     }
 });
 
