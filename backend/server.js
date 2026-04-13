@@ -92,7 +92,11 @@ app.post('/api/query', async (req, res) => {
 
         // Step 3: Execute SQL Query Execution
         try {
-            const rows = await db.query(aiResponse.sql);
+            const queryFn = db.query || (db.default && db.default.query);
+            if (!queryFn) {
+                throw new Error("Query function not found on imported database module.");
+            }
+            const rows = await queryFn(aiResponse.sql);
 
             // Step 4: Return Results + Insightful Explanation
             res.json({
