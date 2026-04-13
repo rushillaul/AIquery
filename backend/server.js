@@ -2,30 +2,31 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { createPool } = require('@vercel/postgres');
+const { createClient } = require('@vercel/postgres');
 
-let pool = null;
+let client = null;
 
-async function getPool() {
-    if (!pool) {
+async function getClient() {
+    if (!client) {
         if (!process.env.POSTGRES_URL) {
             throw new Error("Missing POSTGRES_URL environment variable.");
         }
-        pool = createPool({
+        client = createClient({
             connectionString: process.env.POSTGRES_URL
         });
+        await client.connect();
     }
-    return pool;
+    return client;
 }
 
 async function executeQuery(sqlString, params = []) {
-    const dbPool = await getPool();
-    const client = await dbPool.connect();
+    const dbClient = await getClient();
     try {
-        const result = await client.query(sqlString, params);
+        const result = await dbClient.query(sqlString, params);
         return result.rows;
-    } finally {
-        client.release();
+    } catch (err) {
+        console.error("Query execution error:", err);
+        throw err;
     }
 }
 
