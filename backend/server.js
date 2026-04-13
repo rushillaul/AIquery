@@ -30,6 +30,59 @@ async function executeQuery(sqlString, params = []) {
     }
 }
 
+async function seedDatabase() {
+    try {
+        const dbClient = await getClient();
+        
+        console.log("Creating tables...");
+        
+        await dbClient.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255),
+                email VARCHAR(255),
+                role VARCHAR(255),
+                salary INTEGER
+            );
+        `);
+        
+        await dbClient.query(`
+            CREATE TABLE IF NOT EXISTS orders (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                amount DECIMAL(10, 2),
+                status VARCHAR(255)
+            );
+        `);
+
+        const { rows } = await dbClient.query("SELECT count(*) as count FROM users");
+        if (rows[0].count == 0) {
+            console.log("Seeding database with mock data...");
+            await dbClient.query(`
+                INSERT INTO users (name, email, role, salary) VALUES 
+                ('Alice Smith', 'alice@example.com', 'Admin', 120000),
+                ('Bob Jones', 'bob@example.com', 'User', 75000),
+                ('Charlie Brown', 'charlie@example.com', 'User', 82000);
+            `);
+            
+            await dbClient.query(`
+                INSERT INTO orders (user_id, amount, status) VALUES 
+                (1, 250.50, 'Shipped'),
+                (2, 89.99, 'Processing'),
+                (3, 10.00, 'Delivered');
+            `);
+            console.log("Database seeded successfully.");
+        } else {
+            console.log("Database already seeded.");
+        }
+    } catch (err) {
+        console.error("Seeding error:", err.message);
+    }
+}
+
+// Initialize database on startup
+seedDatabase().catch(err => console.error("Failed to initialize database:", err));
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
