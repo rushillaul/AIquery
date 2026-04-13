@@ -5,17 +5,22 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { createPool } = require('@vercel/postgres');
 
 let pool = null;
-if (process.env.POSTGRES_URL) {
-    pool = createPool({
-        connectionString: process.env.POSTGRES_URL
-    });
+
+async function getPool() {
+    if (!pool) {
+        if (!process.env.POSTGRES_URL) {
+            throw new Error("Missing POSTGRES_URL environment variable.");
+        }
+        pool = createPool({
+            connectionString: process.env.POSTGRES_URL
+        });
+    }
+    return pool;
 }
 
 async function executeQuery(sqlString, params = []) {
-    if (!pool) {
-        throw new Error("Missing POSTGRES_URL environment variable or pool not initialized.");
-    }
-    const client = await pool.connect();
+    const dbPool = await getPool();
+    const client = await dbPool.connect();
     try {
         const result = await client.query(sqlString, params);
         return result.rows;
